@@ -1,7 +1,8 @@
 package main
 
 import (
-	"main/cmd"
+	"fmt"
+	"main/utils"
 )
 
 // func handleCors(w http.ResponseWriter) {
@@ -18,7 +19,19 @@ import (
 // }
 
 func main() {
-	cmd.Serve()
+	// cmd.Serve()
+
+	jwt, err := utils.CreateJWT("secret", utils.Payload{
+		Sub:         "1",
+		FirstName:   "Rakib",
+		LastName:    "Hasan",
+		Email:       "rakibhasan123@gmail.com",
+		IsShopPwner: true,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(jwt)
 }
 
 // func corsMiddleware(next http.Handler) http.HandlerFunc {
