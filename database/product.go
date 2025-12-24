@@ -10,11 +10,14 @@ type Product struct {
 	ImgURl      string
 }
 
-func Store(p Product) {
+func Store(p Product) Product {
+	p.ID = len(productList) + 1
 	productList = append(productList, p)
+	return p
 }
 
 func List() []Product {
+
 	return productList
 }
 
@@ -39,9 +42,9 @@ func Update(id int, p Product) *Product {
 
 func Delete(id int) {
 	var temp []Product
-	for i, v := range productList {
+	for _, v := range productList {
 		if v.ID != id {
-			temp[i] = v
+			temp = append(temp, v)
 		}
 	}
 	productList = temp

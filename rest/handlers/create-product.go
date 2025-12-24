@@ -18,8 +18,8 @@ func CreateProduct(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
-	product.ID = len(database.List()) + 1
-	database.Store(product)
+	product = database.Store(product)
+
 	utils.SendData(w, product, http.StatusCreated)
 
 }
