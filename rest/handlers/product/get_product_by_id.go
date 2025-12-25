@@ -1,4 +1,4 @@
-package handler
+package product
 
 import (
 	"net/http"
@@ -8,7 +8,7 @@ import (
 	"main/utils"
 )
 
-func GetProductById(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetProductById(w http.ResponseWriter, r *http.Request) {
 	productzid := r.PathValue("id")
 	pid, err := strconv.Atoi(productzid)
 	if err != nil {

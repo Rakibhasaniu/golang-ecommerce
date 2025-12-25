@@ -1,7 +1,8 @@
-package handler
+package user
 
 import (
 	"encoding/json"
+	"main/config"
 	"main/database"
 	"main/utils"
 	"net/http"
@@ -12,7 +13,7 @@ type LoginRequest struct {
 	Password string `json:"password"`
 }
 
-func Login(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	var loginRequest LoginRequest
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&loginRequest)
@@ -25,5 +26,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "User not found", http.StatusNotFound)
 		return
 	}
-	utils.SendData(w, user, http.StatusOK)
+	cnf := config.GetConfig()
+	accessToken, err := utils.CreateJWT(cnf.JwtSecret, utils.Payload{
+		Sub:         user.ID,
+		FirstName:   user.FirstName,
+		LastName:    user.LastName,
+		Email:       user.Email,
+		IsShopPwner: user.IsShopOwner,
+	})
+	if err != nil {
+		utils.SendError(w, "Failed to create JWT", http.StatusInternalServerError)
+		return
+	}
+	utils.SendData(w, map[string]interface{}{
+		"jwt": accessToken,
+	}, http.StatusOK)
 }

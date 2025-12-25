@@ -2,17 +2,19 @@ package config
 
 import (
 	"fmt"
-	"github.com/joho/godotenv"
 	"os"
 	"strconv"
+
+	"github.com/joho/godotenv"
 )
 
-var configuration Config
+var configuration *Config
 
 type Config struct {
 	Version     string
 	ServiceName string
 	HttpPort    int
+	JwtSecret   string
 }
 
 func loadConfig() {
@@ -41,16 +43,23 @@ func loadConfig() {
 		fmt.Println("Invalid HTTP port")
 		os.Exit(1)
 	}
-
-	configuration = Config{
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		fmt.Println("JWT secret is required")
+		os.Exit(1)
+	}
+	configuration = &Config{
 		Version:     version,
 		ServiceName: serviceName,
 		HttpPort:    parsedHttpPort,
+		JwtSecret:   jwtSecret,
 	}
 
 }
 
-func GetConfig() Config {
-	loadConfig()
+func GetConfig() *Config {
+	if configuration == nil {
+		loadConfig()
+	}
 	return configuration
 }

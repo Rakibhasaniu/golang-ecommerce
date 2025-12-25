@@ -4,21 +4,42 @@ import (
 	"fmt"
 	"log"
 	"main/config"
+	"main/rest/handlers/product"
+	"main/rest/handlers/user"
 	"main/rest/middleware"
 	"net/http"
 	"strconv"
 )
 
-func Start(cnf config.Config) {
+type Server struct {
+	cnf            *config.Config
+	productHandler *product.Handler
+	userHandler    *user.Handler
+}
+
+func NewServer(
+	productHandler *product.Handler,
+	userHandler *user.Handler,
+	cnf *config.Config,
+) *Server {
+	return &Server{
+		productHandler: productHandler,
+		userHandler:    userHandler,
+		cnf:            cnf,
+	}
+}
+func (s *Server) Start() {
 	manager := middleware.NewManager()
 	manager.Use(middleware.Logger, middleware.HandleCors, middleware.HandlePreflight)
 
 	mux := http.NewServeMux()
-	initRoutes(mux, manager)
+	// initRoutes(mux, manager)
 	wrappedMux := manager.WrapMux(mux)
-	fmt.Println("Server started on :" + strconv.Itoa(cnf.HttpPort))
+	s.productHandler.ProductRoutes(mux, manager)
+	s.userHandler.UserRoutes(mux, manager)
+	fmt.Println("Server started on :" + strconv.Itoa(s.cnf.HttpPort))
 
-	err := http.ListenAndServe(":"+strconv.Itoa(cnf.HttpPort), wrappedMux)
+	err := http.ListenAndServe(":"+strconv.Itoa(s.cnf.HttpPort), wrappedMux)
 	if err != nil {
 		log.Fatal(err)
 	}
