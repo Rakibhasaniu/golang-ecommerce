@@ -2,8 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"main/config"
-	"main/database"
 	"main/utils"
 	"net/http"
 )
@@ -21,12 +19,12 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
-	user := database.FindByEmail(loginRequest.Email, loginRequest.Password)
-	if user == nil {
+	user, err := h.userRepo.GetUserByEmail(loginRequest.Email, loginRequest.Password)
+	if err != nil {
 		utils.SendError(w, "User not found", http.StatusNotFound)
 		return
 	}
-	cnf := config.GetConfig()
+	cnf := h.config
 	accessToken, err := utils.CreateJWT(cnf.JwtSecret, utils.Payload{
 		Sub:         user.ID,
 		FirstName:   user.FirstName,

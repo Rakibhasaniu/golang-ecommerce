@@ -2,11 +2,18 @@ package product
 
 import (
 	"encoding/json"
-	"main/database"
+	"main/repo"
 	"main/utils"
 	"net/http"
 	"strconv"
 )
+
+type RewUpdateProduct struct {
+	Title       string
+	Description string
+	Price       float64
+	ImgURl      string
+}
 
 func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 
@@ -17,17 +24,21 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var product database.Product
+	var req RewUpdateProduct
 	decoder := json.NewDecoder(r.Body)
-	err = decoder.Decode(&product)
+	err = decoder.Decode(&req)
 	if err != nil {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
 
-	product.ID = productIDInt
-	updatedProduct := database.Update(productIDInt, product)
-	if updatedProduct == nil {
+	updatedProduct, err := h.productRepo.UpdateProduct(productIDInt, repo.Product{
+		Title:       req.Title,
+		Description: req.Description,
+		Price:       req.Price,
+		ImgURl:      req.ImgURl,
+	})
+	if err != nil {
 		utils.SendError(w, "product not found", http.StatusNotFound)
 		return
 	}

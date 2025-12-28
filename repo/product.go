@@ -1,6 +1,4 @@
-package database
-
-var productList []Product
+package repo
 
 type Product struct {
 	ID          int
@@ -10,48 +8,61 @@ type Product struct {
 	ImgURl      string
 }
 
-func Store(p Product) Product {
-	p.ID = len(productList) + 1
-	productList = append(productList, p)
-	return p
+type ProductRepo interface {
+	CreateProduct(p Product) (*Product, error)
+	GetProducts() (*[]Product, error)
+	GetProductById(id int) (*Product, error)
+	UpdateProduct(id int, p Product) (*Product, error)
+	DeleteProduct(id int) (*Product, error)
+}
+type productRepo struct {
+	productList []Product
 }
 
-func List() []Product {
-
-	return productList
+func NewProductRepo() ProductRepo {
+	repo := &productRepo{}
+	generateProduct(repo)
+	return repo
 }
 
-func ListById(id int) *Product {
-	for _, p := range productList {
+func (r *productRepo) CreateProduct(p Product) (*Product, error) {
+	r.productList = append(r.productList, p)
+	return &p, nil
+}
+func (r *productRepo) GetProducts() (*[]Product, error) {
+	return &r.productList, nil
+}
+
+func (r *productRepo) GetProductById(id int) (*Product, error) {
+	for _, p := range r.productList {
 		if p.ID == id {
-			return &p
+			return &p, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
-
-func Update(id int, p Product) *Product {
-	for i, v := range productList {
+func (r *productRepo) UpdateProduct(id int, p Product) (*Product, error) {
+	for i, v := range r.productList {
 		if v.ID == id {
-			productList[i] = p
-			return &p
+			r.productList[i] = p
+			return &p, nil
 		}
 	}
-	return nil
+	return nil, nil
 }
-
-func Delete(id int) {
+func (r *productRepo) DeleteProduct(id int) (*Product, error) {
 	var temp []Product
-	for _, v := range productList {
+	for _, v := range r.productList {
 		if v.ID != id {
 			temp = append(temp, v)
 		}
 	}
-	productList = temp
+	r.productList = temp
+	return nil, nil
 }
 
-func init() {
-	productList = []Product{
+func generateProduct(r *productRepo) {
+	r.productList = []Product{
 		{
 			ID:          1,
 			Title:       "Orange",

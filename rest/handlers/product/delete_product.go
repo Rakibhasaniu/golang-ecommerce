@@ -1,7 +1,6 @@
 package product
 
 import (
-	"main/database"
 	"main/utils"
 	"net/http"
 	"strconv"
@@ -15,7 +14,7 @@ func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "please give a valid id", http.StatusBadRequest)
 		return
 	}
-	database.Delete(productIDInt)
+	h.productRepo.DeleteProduct(productIDInt)
 	utils.SendData(w, "product deleted", http.StatusOK)
 
 }
