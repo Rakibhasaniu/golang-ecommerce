@@ -16,6 +16,10 @@ func (h *Handler) GetProductById(w http.ResponseWriter, r *http.Request) {
 	}
 	product, err := h.productRepo.GetProductById(pid)
 	if err != nil {
+		utils.SendError(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if product == nil {
 		utils.SendError(w, "product not found", http.StatusNotFound)
 		return
 	}

@@ -13,12 +13,12 @@ import (
 
 func Serve() {
 	cnf := config.GetConfig()
-	db, err := db.NewConnection()
+	db, err := db.NewConnection(cnf.DBConfig)
 	if err != nil {
-		log.Fatal("Failed to connect to database")
+		log.Fatal("Failed to connect to database: ", err)
 	}
 	middleware := middleware.NewMiddlewares(cnf)
-	productRepo := repo.NewProductRepo()
+	productRepo := repo.NewProductRepo(db)
 	productHandler := product.NewHandler(middleware, productRepo)
 	userRepo := repo.NewUserRepo(db)
 	userHandler := user.NewHandler(userRepo, cnf)

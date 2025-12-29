@@ -2,7 +2,6 @@ package product
 
 import (
 	"encoding/json"
-	"main/repo"
 	"main/utils"
 	"net/http"
 	"strconv"
@@ -16,11 +15,21 @@ type RewUpdateProduct struct {
 }
 
 func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-
 	productID := r.PathValue("id")
-	productIDInt, err := strconv.Atoi(productID)
+	pid, err := strconv.Atoi(productID)
 	if err != nil {
 		utils.SendError(w, "please give a valid id", http.StatusBadRequest)
+		return
+	}
+
+	// Get existing product
+	existingProduct, err := h.productRepo.GetProductById(pid)
+	if err != nil {
+		utils.SendError(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if existingProduct == nil {
+		utils.SendError(w, "product not found", http.StatusNotFound)
 		return
 	}
 
@@ -32,13 +41,26 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	updatedProduct, err := h.productRepo.UpdateProduct(productIDInt, repo.Product{
-		Title:       req.Title,
-		Description: req.Description,
-		Price:       req.Price,
-		ImgURl:      req.ImgURl,
-	})
+	// Merge changes with existing product
+	if req.Title != "" {
+		existingProduct.Title = req.Title
+	}
+	if req.Description != "" {
+		existingProduct.Description = req.Description
+	}
+	if req.Price != 0 {
+		existingProduct.Price = req.Price
+	}
+	if req.ImgURl != "" {
+		existingProduct.ImgURl = req.ImgURl
+	}
+
+	updatedProduct, err := h.productRepo.UpdateProduct(*existingProduct)
 	if err != nil {
+		utils.SendError(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+	if updatedProduct == nil {
 		utils.SendError(w, "product not found", http.StatusNotFound)
 		return
 	}
