@@ -2,7 +2,7 @@ package user
 
 import (
 	"encoding/json"
-	"main/repo"
+	"main/domain"
 	"main/utils"
 	"net/http"
 )
@@ -23,7 +23,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
-	user, err := h.userRepo.CreateUser(repo.User{
+	user, err := h.svc.CreateUser(domain.User{
 		FirstName:   req.FirstName,
 		LastName:    req.LastName,
 		Email:       req.Email,

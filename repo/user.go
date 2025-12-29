@@ -2,22 +2,14 @@ package repo
 
 import (
 	"database/sql"
+	"main/domain"
+	"main/user"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type User struct {
-	ID          int    `json:"id" db:"id"`
-	FirstName   string `json:"first_name" db:"first_name"`
-	LastName    string `json:"last_name" db:"last_name"`
-	Email       string `json:"email" db:"email"`
-	Password    string `json:"password" db:"password"`
-	IsShopOwner bool   `json:"is_shop_owner" db:"is_shop_owner"`
-}
-
 type UserRepo interface {
-	CreateUser(u User) (*User, error)
-	GetUserByEmail(email string, password string) (*User, error)
+	user.UserRepo
 }
 type userRepo struct {
 	dbCon *sqlx.DB
@@ -41,7 +33,7 @@ func NewUserRepo(dbCon *sqlx.DB) UserRepo {
 // 	updated_at TIMESTAMP WITH TIME ZONE  DEFAULT CURRENT_TIMESTAMP
 // )
 
-func (u *userRepo) CreateUser(user User) (*User, error) {
+func (u *userRepo) CreateUser(user domain.User) (*domain.User, error) {
 	query := `INSERT INTO users (
 	first_name, 
 	last_name, 
@@ -66,9 +58,9 @@ func (u *userRepo) CreateUser(user User) (*User, error) {
 	return &user, nil
 }
 
-func (u *userRepo) GetUserByEmail(email string, password string) (*User, error) {
+func (u *userRepo) GetUserByEmail(email string, password string) (*domain.User, error) {
 	query := `SELECT id, first_name, last_name, email, password, is_shop_owner FROM users WHERE email = $1 AND password = $2`
-	var user User
+	var user domain.User
 	err := u.dbCon.Get(&user, query, email, password)
 	if err != nil {
 		if err == sql.ErrNoRows {

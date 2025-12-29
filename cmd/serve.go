@@ -6,22 +6,34 @@ import (
 	"main/infra/db"
 	"main/repo"
 	"main/rest"
-	"main/rest/handlers/product"
-	"main/rest/handlers/user"
+	productHandler "main/rest/handlers/product"
+	userHandler "main/rest/handlers/user"
 	"main/rest/middleware"
+	"main/user"
+	"os"
 )
 
 func Serve() {
 	cnf := config.GetConfig()
-	db, err := db.NewConnection(cnf.DBConfig)
+	database, err := db.NewConnection(cnf.DBConfig)
 	if err != nil {
 		log.Fatal("Failed to connect to database: ", err)
 	}
+	err = db.MigrateDB(database, "./migrations")
+	if err != nil {
+		log.Fatal("Failed to migrate database: ", err)
+		os.Exit(1)
+	}
 	middleware := middleware.NewMiddlewares(cnf)
-	productRepo := repo.NewProductRepo(db)
-	productHandler := product.NewHandler(middleware, productRepo)
-	userRepo := repo.NewUserRepo(db)
-	userHandler := user.NewHandler(userRepo, cnf)
+	// repos
+	productRepo := repo.NewProductRepo(database)
+	userRepo := repo.NewUserRepo(database)
+
+	//domain
+	usrSvc := user.NewService(userRepo)
+	// handlers
+	productHandler := productHandler.NewHandler(middleware, productRepo)
+	userHandler := userHandler.NewHandler(usrSvc, cnf)
 
 	rest.NewServer(productHandler, userHandler, cnf).Start()
 

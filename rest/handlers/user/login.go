@@ -19,7 +19,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
-	user, err := h.userRepo.GetUserByEmail(loginRequest.Email, loginRequest.Password)
+	user, err := h.svc.GetUserByEmail(loginRequest.Email, loginRequest.Password)
 	if err != nil {
 		utils.SendError(w, "User not found", http.StatusNotFound)
 		return
