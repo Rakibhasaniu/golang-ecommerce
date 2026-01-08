@@ -2,26 +2,14 @@ package repo
 
 import (
 	"database/sql"
+	"main/domain"
+	"main/product"
 
 	"github.com/jmoiron/sqlx"
 )
 
-type Product struct {
-	ID          int     `db:"id"`
-	Title       string  `db:"title"`
-	Description string  `db:"description"`
-	Price       float64 `db:"price"`
-	ImgURl      string  `db:"img_url"`
-	CreatedAt   string  `db:"created_at"`
-	UpdatedAt   string  `db:"updated_at"`
-}
-
 type ProductRepo interface {
-	CreateProduct(p Product) (*Product, error)
-	GetProducts() ([]Product, error)
-	GetProductById(id int) (*Product, error)
-	UpdateProduct(p Product) (*Product, error)
-	DeleteProduct(id int) (*Product, error)
+	product.ProductRepo
 }
 type productRepo struct {
 	dbCon *sqlx.DB
@@ -34,28 +22,38 @@ func NewProductRepo(dbCon *sqlx.DB) ProductRepo {
 	return repo
 }
 
-func (r *productRepo) CreateProduct(p Product) (*Product, error) {
+func (r *productRepo) CreateProduct(p domain.Product) (*domain.Product, error) {
 	query := `INSERT INTO products (title, description, price, img_url) VALUES ($1, $2, $3, $4) RETURNING id`
-	row := r.dbCon.QueryRow(query, p.Title, p.Description, p.Price, p.ImgURl)
+	row := r.dbCon.QueryRow(query, p.Title, p.Description, p.Price, p.ImgUrl)
 	err := row.Scan(&p.ID)
 	if err != nil {
 		return nil, err
 	}
 	return &p, nil
 }
-func (r *productRepo) GetProducts() ([]Product, error) {
-	var productList []Product
-	query := `SELECT * FROM products`
-	err := r.dbCon.Select(&productList, query)
+func (r *productRepo) GetProducts(page int, limit int) ([]domain.Product, error) {
+	var productList []domain.Product
+	query := `SELECT * FROM products LIMIT $1 OFFSET $2`
+	err := r.dbCon.Select(&productList, query, limit, (page-1)*limit)
 	if err != nil {
 		return nil, err
 	}
 	return productList, nil
 }
 
-func (r *productRepo) GetProductById(id int) (*Product, error) {
+func (r *productRepo) CountProducts() (int, error) {
+	query := `SELECT COUNT(*) FROM products`
+	var count int
+	err := r.dbCon.QueryRow(query).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *productRepo) GetProductById(id int) (*domain.Product, error) {
 	query := `SELECT * FROM products WHERE id = $1`
-	var product Product
+	var product domain.Product
 	err := r.dbCon.Get(&product, query, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -65,9 +63,9 @@ func (r *productRepo) GetProductById(id int) (*Product, error) {
 	}
 	return &product, nil
 }
-func (r *productRepo) UpdateProduct(p Product) (*Product, error) {
+func (r *productRepo) UpdateProduct(p domain.Product) (*domain.Product, error) {
 	query := `UPDATE products SET title = $1, description = $2, price = $3, img_url = $4 WHERE id = $5 RETURNING id`
-	row := r.dbCon.QueryRow(query, p.Title, p.Description, p.Price, p.ImgURl, p.ID)
+	row := r.dbCon.QueryRow(query, p.Title, p.Description, p.Price, p.ImgUrl, p.ID)
 	err := row.Scan(&p.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -78,7 +76,7 @@ func (r *productRepo) UpdateProduct(p Product) (*Product, error) {
 
 	return &p, nil
 }
-func (r *productRepo) DeleteProduct(id int) (*Product, error) {
+func (r *productRepo) DeleteProduct(id int) (*domain.Product, error) {
 	query := `DELETE FROM products WHERE id = $1 RETURNING id`
 	_, err := r.dbCon.Exec(query, id)
 	if err != nil {

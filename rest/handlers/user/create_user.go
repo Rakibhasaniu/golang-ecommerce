@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"main/domain"
 	"main/utils"
 	"net/http"
@@ -31,7 +32,7 @@ func (h *Handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		IsShopOwner: req.IsShopOwner,
 	})
 	if err != nil {
-		utils.SendError(w, "Failed to create user", http.StatusInternalServerError)
+		utils.SendError(w, fmt.Sprintf("Failed to create user: %v", err), http.StatusInternalServerError)
 		return
 	}
 	utils.SendData(w, user, http.StatusCreated)

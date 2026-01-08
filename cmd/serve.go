@@ -4,6 +4,7 @@ import (
 	"log"
 	"main/config"
 	"main/infra/db"
+	"main/product"
 	"main/repo"
 	"main/rest"
 	productHandler "main/rest/handlers/product"
@@ -31,8 +32,9 @@ func Serve() {
 
 	//domain
 	usrSvc := user.NewService(userRepo)
+	prdSvc := product.NewService(productRepo)
 	// handlers
-	productHandler := productHandler.NewHandler(middleware, productRepo)
+	productHandler := productHandler.NewHandler(middleware, prdSvc)
 	userHandler := userHandler.NewHandler(usrSvc, cnf)
 
 	rest.NewServer(productHandler, userHandler, cnf).Start()

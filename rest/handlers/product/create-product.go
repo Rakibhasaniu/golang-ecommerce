@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"main/repo"
+	"main/domain"
 	"main/utils"
 )
 
@@ -12,7 +12,7 @@ type RewCreateProduct struct {
 	Title       string
 	Description string
 	Price       float64
-	ImgURl      string
+	ImgUrl      string
 }
 
 func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
@@ -25,11 +25,11 @@ func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
 		utils.SendError(w, "Invalid JSON data", http.StatusBadRequest)
 		return
 	}
-	createdProduct, err := h.productRepo.CreateProduct(repo.Product{
+	createdProduct, err := h.svc.CreateProduct(domain.Product{
 		Title:       req.Title,
 		Description: req.Description,
 		Price:       req.Price,
-		ImgURl:      req.ImgURl,
+		ImgUrl:      req.ImgUrl,
 	})
 	if err != nil {
 		utils.SendError(w, "Failed to create product", http.StatusInternalServerError)

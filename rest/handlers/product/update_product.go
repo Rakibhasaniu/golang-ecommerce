@@ -23,7 +23,7 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get existing product
-	existingProduct, err := h.productRepo.GetProductById(pid)
+	existingProduct, err := h.svc.GetProductById(pid)
 	if err != nil {
 		utils.SendError(w, "internal server error", http.StatusInternalServerError)
 		return
@@ -52,10 +52,10 @@ func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
 		existingProduct.Price = req.Price
 	}
 	if req.ImgURl != "" {
-		existingProduct.ImgURl = req.ImgURl
+		existingProduct.ImgUrl = req.ImgURl
 	}
 
-	updatedProduct, err := h.productRepo.UpdateProduct(*existingProduct)
+	updatedProduct, err := h.svc.UpdateProduct(*existingProduct)
 	if err != nil {
 		utils.SendError(w, "internal server error", http.StatusInternalServerError)
 		return

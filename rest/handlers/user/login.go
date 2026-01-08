@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"fmt"
 	"main/utils"
 	"net/http"
 )
@@ -21,7 +22,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 	user, err := h.svc.GetUserByEmail(loginRequest.Email, loginRequest.Password)
 	if err != nil {
-		utils.SendError(w, "User not found", http.StatusNotFound)
+		utils.SendError(w, fmt.Sprintf("User not found: %v", err), http.StatusNotFound)
 		return
 	}
 	cnf := h.config
