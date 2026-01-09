@@ -10,6 +10,7 @@ import (
 )
 
 var cnt int
+var mu sync.Mutex
 
 func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	reqQuery := r.URL.Query()
@@ -40,6 +41,8 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+		mu.Lock()
+		defer mu.Unlock()
 		total, err := h.svc.CountProducts()
 		if err != nil {
 			fmt.Println(err)
@@ -47,43 +50,6 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		cnt = total
-
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		total, err := h.svc.CountProducts()
-		if err != nil {
-			fmt.Println(err)
-			utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
-			return
-		}
-		cnt = total
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		total, err := h.svc.CountProducts()
-		if err != nil {
-			fmt.Println(err)
-			utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
-			return
-		}
-		cnt = total
-
-	}()
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		total, err := h.svc.CountProducts()
-		if err != nil {
-			fmt.Println(err)
-			utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
-			return
-		}
-		cnt = total
-
 	}()
 	wg.Wait()
 	utils.SendPagination(w, products, int(page), int(limit), cnt)
