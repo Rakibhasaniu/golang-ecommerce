@@ -4,13 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"sync"
 
+	"main/domain"
 	"main/utils"
 )
-
-var cnt int
-var mu sync.Mutex
 
 func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 	reqQuery := r.URL.Query()
@@ -25,33 +22,39 @@ func (h *Handler) GetProduct(w http.ResponseWriter, r *http.Request) {
 		limit = 10
 	}
 
-	products, err := h.svc.GetProducts(int(page), int(limit))
-	if err != nil {
-		fmt.Println(err)
-		utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
-		return
-	}
+	prdCh := make(chan []domain.Product)
+
+	go func() {
+		products, err := h.svc.GetProducts(int(page), int(limit))
+		if err != nil {
+			fmt.Println(err)
+			utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
+			return
+		}
+		prdCh <- products
+	}()
+	products := <-prdCh
 	// total, err := h.svc.CountProducts()
 	// if err != nil {
 	// 	fmt.Println(err)
 	// 	utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
 	// 	return
 	// }
-	var wg sync.WaitGroup
-	wg.Add(1)
+	ch := make(chan int)
+	// var wg sync.WaitGroup
+	// wg.Add(1)
 	go func() {
-		defer wg.Done()
-		mu.Lock()
-		defer mu.Unlock()
+		// defer wg.Done()
 		total, err := h.svc.CountProducts()
 		if err != nil {
 			fmt.Println(err)
 			utils.SendError(w, "Failed to get products", http.StatusInternalServerError)
 			return
 		}
-		cnt = total
+		ch <- total
 	}()
-	wg.Wait()
-	utils.SendPagination(w, products, int(page), int(limit), cnt)
+	// wg.Wait()
+	total := <-ch
+	utils.SendPagination(w, products, int(page), int(limit), total)
 
 }
